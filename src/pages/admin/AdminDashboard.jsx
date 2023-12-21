@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import { createproductApi, getAllProductsApi } from "../../apis/Api";
+import {Link} from "react-router-dom";
 
 const AdminDashboard = () => {
   //Male usestate
   const [productName, setProductName] = useState("");
   const [productPrice, setProductPrice] = useState("");
-  const [ProductDescription, setProductDescription] = useState("");
-  const [ProductCategory, setProductCategory] = useState("");
-
+  const [productDescription, setProductDescription] = useState("");
+  const [productCategory, setProductCategory] = useState("");
   const [productImage, setProductImage] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
 
@@ -17,14 +19,39 @@ const AdminDashboard = () => {
     setProductImage(file);
     setPreviewImage(URL.createObjectURL(file));
   };
+  //load all products when page load
+  const [products, setProducts] = useState([]);
+  useEffect(() => {
+    getAllProductsApi().then((res) => {
+      setProducts(res.data.products);
+    });
+  }, []);
 
   //submit function
 
-  const handleSubmit=(e)=>{
-    console.log(
-      productName,productPrice,ProductDescription,ProductCategory
-    )
-  }
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const formData = new FormData();
+    formData.append("productName", productName);
+    formData.append("productPrice", productPrice);
+    formData.append("productDescription", productDescription);
+    formData.append("productCategory", productCategory);
+    formData.append("productImage", productImage);
+
+    //send req to backend Api
+    createproductApi(formData)
+      .then((res) => {
+        if (res.data.success == false) {
+          toast.error(res.data.message);
+        } else {
+          toast.success(res.data.message);
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        toast.error("Internal server error");
+      });
+  };
 
   return (
     <>
@@ -119,7 +146,11 @@ const AdminDashboard = () => {
                   >
                     Close
                   </button>
-                  <button onClick={handleSubmit} type="button" className="btn btn-primary">
+                  <button
+                    onClick={handleSubmit}
+                    type="button"
+                    className="btn btn-primary"
+                  >
                     Save changes
                   </button>
                 </div>
@@ -140,33 +171,34 @@ const AdminDashboard = () => {
           </tr>
         </thead>
         <tbody class="table-group-divider">
-          <tr>
-            <td>
-              <img
-                src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSV1rARdKWopb7On1bDS5hH5_7bjT7ZH1n1U-Fb-ysCpA&s"
-                height={50}
-                width={50}
-              />
-            </td>
-            <td>Rose</td>
-            <td>NPR:200</td>
-            <td>Flower for description</td>
-            <td>flower</td>
-            <td>
-              <div
-                className="btn-group"
-                role="group"
-                aria-label="Basic mixed styles example"
-              >
-                <button type="button" className="btn btn-success">
-                  Edit
-                </button>
-                <button type="button" className="btn btn-danger">
-                  Delete
-                </button>
-              </div>
-            </td>
-          </tr>
+          {products.map((item) => (
+            <tr>
+              <td>
+                <img src={item.productImageUrl}
+                  height={100}
+                  width={100}
+                />
+              </td>
+              <td>{item.productName}</td>
+              <td>NPR:{item.productPrice}</td>
+              <td>{item.productDescription.slice(0,20)}</td>
+              <td>{item.productCategory}</td>
+              <td>
+                <div
+                  className="btn-group"
+                  role="group"
+                  aria-label="Basic mixed styles example"
+                >
+                  <Link to={`/admin/edit/${item._id}`} type="button" className="btn btn-success">
+                    Edit
+                  </Link>
+                  <button type="button" className="btn btn-danger">
+                    Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </>

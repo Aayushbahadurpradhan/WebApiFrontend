@@ -15,6 +15,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Login from './pages/Login';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminEditProduct from './pages/admin/AdminEditProduct';
 function App() {
   return (
     <Router>
@@ -29,6 +30,8 @@ function App() {
 
         {/* Admin routes */}
         <Route path='/admin/dashboard' element={<AdminDashboard />} />
+        <Route path='/admin/edit/:id' element={<AdminEditProduct/>}/>
+
       </Routes>
     </Router>
   );
